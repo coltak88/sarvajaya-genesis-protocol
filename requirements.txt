@@ -1,0 +1,89 @@
+# Core AI/ML frameworks
+torch>=2.1.0
+tensorflow>=2.14.0
+transformers>=4.35.0
+scikit-learn>=1.3.0
+numpy>=1.24.0
+pandas>=2.1.0
+
+# FastAPI and web framework
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+graphene>=3.3.0
+strawberry-graphql>=0.213.0
+
+# Async processing and task queue
+aiohttp>=3.9.0
+httpx>=0.25.0
+celery>=5.3.0
+redis>=5.0.0
+kafka-python>=2.0.2
+
+# Database and storage
+sqlalchemy>=2.0.0
+psycopg2-binary>=2.9.7
+mongodb>=4.5.0
+pymongo>=4.5.0
+alembic>=1.12.0
+
+# Data processing and analytics
+scipy>=1.11.0
+matplotlib>=3.7.0
+seaborn>=0.12.0
+plotly>=5.17.0
+jupyter>=1.0.0
+
+# Natural Language Processing
+nltk>=3.8.1
+spacy>=3.7.0
+gensim>=4.3.0
+textblob>=0.17.1
+
+# Computer Vision (optional)
+opencv-python>=4.8.0
+Pillow>=10.0.0
+
+# Security and authentication
+cryptography>=41.0.0
+pyjwt>=2.8.0
+passlib[bcrypt]>=1.7.4
+
+# Configuration and environment
+python-dotenv>=1.0.0
+pydantic>=2.4.0
+pydantic-settings>=2.0.0
+click>=8.1.0
+
+# Monitoring and logging
+loguru>=0.7.2
+prometheus-client>=0.18.0
+opentelemetry-api>=1.20.0
+opentelemetry-sdk>=1.20.0
+
+# Distributed computing
+dask>=2023.10.0
+ray>=2.7.0
+
+# API clients and integrations
+requests>=2.31.0
+websockets>=11.0.0
+
+# Development and testing
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+pytest-cov>=4.1.0
+black>=23.9.0
+isort>=5.12.0
+flake8>=6.1.0
+mypy>=1.6.0
+pre-commit>=3.5.0
+
+# Deployment and containerization
+gunicorn>=21.2.0
+docker>=6.1.0
+kubernetes>=28.1.0
+
+# Memory and performance optimization
+psutil>=5.9.0
+memory-profiler>=0.61.0
+line-profiler>=4.1.0
