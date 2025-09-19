@@ -1,0 +1,262 @@
+version: '3.8'
+
+services:
+  # Sarvajaya Genesis Protocol AI System
+  sarvajaya-genesis:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sarvajaya-genesis
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - HOST=0.0.0.0
+      - ENVIRONMENT=production
+      - DATABASE_URL=postgresql://postgres:password@postgres:5432/sarvajaya_genesis
+      - REDIS_URL=redis://redis:6379
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+      - WEAVIATE_URL=http://weaviate:8080
+      - WEAVIATE_API_KEY=your-weaviate-key
+      - OPENAI_API_KEY=your-openai-key
+      - ANTHROPIC_API_KEY=your-anthropic-key
+      - HUGGINGFACE_API_KEY=your-huggingface-key
+      - JWT_SECRET_KEY=your-secret-key-here
+      - JWT_ALGORITHM=HS256
+      - JWT_ACCESS_TOKEN_EXPIRE_MINUTES=30
+      - S3_BUCKET_NAME=sarvajaya-genesis-data
+      - AWS_ACCESS_KEY_ID=your-access-key
+      - AWS_SECRET_ACCESS_KEY=your-secret-key
+      - AWS_REGION=us-east-1
+      - LOG_LEVEL=INFO
+    depends_on:
+      - redis
+      - postgres
+      - weaviate
+      - mlflow
+      - celery-worker
+    networks:
+      - sarvajaya-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Celery Worker for AI/ML Tasks
+  celery-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sarvajaya-celery-worker
+    command: ["celery", "-A", "src.main.celery", "worker", "--loglevel=info", "--concurrency=2", "--pool=threads"]
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - DATABASE_URL=postgresql://postgres:password@postgres:5432/sarvajaya_genesis
+      - OPENAI_API_KEY=your-openai-key
+      - ANTHROPIC_API_KEY=your-anthropic-key
+      - HUGGINGFACE_API_KEY=your-huggingface-key
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+      - WEAVIATE_URL=http://weaviate:8080
+      - WEAVIATE_API_KEY=your-weaviate-key
+      - S3_BUCKET_NAME=sarvajaya-genesis-data
+      - AWS_ACCESS_KEY_ID=your-access-key
+      - AWS_SECRET_ACCESS_KEY=your-secret-key
+      - AWS_REGION=us-east-1
+      - LOG_LEVEL=INFO
+    depends_on:
+      - redis
+      - postgres
+      - weaviate
+      - mlflow
+    networks:
+      - sarvajaya-network
+    restart: unless-stopped
+
+  # Celery Beat for Scheduled AI Tasks
+  celery-beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sarvajaya-celery-beat
+    command: ["celery", "-A", "src.main.celery", "beat", "--loglevel=info"]
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - DATABASE_URL=postgresql://postgres:password@postgres:5432/sarvajaya_genesis
+      - LOG_LEVEL=INFO
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - sarvajaya-network
+    restart: unless-stopped
+
+  # Redis Cache and Message Broker
+  redis:
+    image: redis:7-alpine
+    container_name: sarvajaya-redis
+    ports:
+      - "6381:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - sarvajaya-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: sarvajaya-postgres
+    ports:
+      - "5434:5432"
+    environment:
+      - POSTGRES_DB=sarvajaya_genesis
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - sarvajaya-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Weaviate Vector Database
+  weaviate:
+    image: semitechnologies/weaviate:1.21.0
+    container_name: sarvajaya-weaviate
+    ports:
+      - "8081:8080"
+    environment:
+      - QUERY_DEFAULTS_LIMIT=25
+      - AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED=true
+      - PERSISTENCE_DATA_PATH=/var/lib/weaviate
+      - DEFAULT_VECTORIZER_MODULE=none
+      - CLUSTER_HOSTNAME=node1
+    volumes:
+      - weaviate_data:/var/lib/weaviate
+    networks:
+      - sarvajaya-network
+    restart: unless-stopped
+
+  # MLflow for ML Model Tracking
+  mlflow:
+    image: python:3.11-slim
+    container_name: sarvajaya-mlflow
+    ports:
+      - "5000:5000"
+    environment:
+      - MLFLOW_BACKEND_STORE_URI=postgresql://postgres:password@postgres:5432/mlflow
+      - MLFLOW_DEFAULT_ARTIFACT_ROOT=s3://sarvajaya-genesis-data/mlflow
+      - AWS_ACCESS_KEY_ID=your-access-key
+      - AWS_SECRET_ACCESS_KEY=your-secret-key
+      - AWS_REGION=us-east-1
+    command: >
+      bash -c "pip install mlflow[extras] psycopg2-binary boto3 &&
+               mlflow server --host 0.0.0.0 --port 5000 
+               --backend-store-uri postgresql://postgres:password@postgres:5432/mlflow
+               --default-artifact-root s3://sarvajaya-genesis-data/mlflow"
+    depends_on:
+      - postgres
+    networks:
+      - sarvajaya-network
+    restart: unless-stopped
+
+  # Jupyter Lab for Development
+  jupyter:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sarvajaya-jupyter
+    ports:
+      - "8888:8888"
+    command: ["jupyter", "lab", "--ip=0.0.0.0", "--port=8888", "--no-browser", "--allow-root", "--NotebookApp.token=''"]
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+      - DATABASE_URL=postgresql://postgres:password@postgres:5432/sarvajaya_genesis
+      - REDIS_URL=redis://redis:6379
+      - OPENAI_API_KEY=your-openai-key
+      - ANTHROPIC_API_KEY=your-anthropic-key
+      - HUGGINGFACE_API_KEY=your-huggingface-key
+    volumes:
+      - ./notebooks:/app/notebooks
+      - ./data:/app/data
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - sarvajaya-network
+    restart: unless-stopped
+
+  # Flower for Celery Monitoring
+  flower:
+    image: mher/flower:latest
+    container_name: sarvajaya-flower
+    ports:
+      - "5556:5555"
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - FLOWER_BASIC_AUTH=admin:password
+    depends_on:
+      - redis
+    networks:
+      - sarvajaya-network
+    restart: unless-stopped
+
+  # Prometheus for Metrics
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: sarvajaya-prometheus
+    ports:
+      - "9092:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    networks:
+      - sarvajaya-network
+    restart: unless-stopped
+
+  # Grafana for Dashboards
+  grafana:
+    image: grafana/grafana:latest
+    container_name: sarvajaya-grafana
+    ports:
+      - "3002:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
+    depends_on:
+      - prometheus
+    networks:
+      - sarvajaya-network
+    restart: unless-stopped
+
+volumes:
+  redis_data:
+  postgres_data:
+  weaviate_data:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  sarvajaya-network:
+    driver: bridge
