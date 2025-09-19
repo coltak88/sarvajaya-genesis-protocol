@@ -1,0 +1,345 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Sarvajaya Genesis Protocol AI System Dashboard",
+    "tags": [\"ai-system\", \"monitoring\", \"production\", \"ml\", \"nlp\"],
+    "style": \"dark\",
+    "timezone": \"browser\",
+    \"refresh\": \"30s\",
+    \"time\": {
+      \"from\": \"now-1h\",
+      \"to\": \"now\"
+    },
+    \"panels\": [
+      {
+        \"id\": 1,
+        \"title\": \"AI System Health\",
+        \"type\": \"stat\",
+        \"targets\": [
+          {
+            \"expr\": \"up{job=\"fastapi-app\"}\",
+            \"legendFormat\": \"API Status\"
+          },
+          {
+            \"expr\": \"up{job=\"postgresql\"}\",
+            \"legendFormat\": \"Database Status\"
+          },
+          {
+            \"expr\": \"up{job=\"redis\"}\",
+            \"legendFormat\": \"Cache Status\"
+          },
+          {
+            \"expr\": \"up{job=\"weaviate\"}\",
+            \"legendFormat\": \"Vector DB Status\"
+          },
+          {
+            \"expr\": \"up{job=\"celery-workers\"}\",
+            \"legendFormat\": \"AI Workers Status\"
+          },
+          {
+            \"expr\": \"up{job=\"mlflow\"}\",
+            \"legendFormat\": \"MLflow Status\"
+          }
+        ],
+        \"gridPos\": {\"h\": 4, \"w\": 12, \"x\": 0, \"y\": 0}
+      },
+      {
+        \"id\": 2,
+        \"title\": \"AI Request Volume\",
+        \"type\": \"graph\",
+        \"targets\": [
+          {
+            \"expr\": \"rate(ai_requests_total[5m])\",
+            \"legendFormat\": \"AI Requests/sec\"
+          },
+          {
+            \"expr\": \"rate(nlp_requests_total[5m])\",
+            \"legendFormat\": \"NLP Requests/sec\"
+          },
+          {
+            \"expr\": \"rate(vector_search_requests_total[5m])\",
+            \"legendFormat\": \"Vector Search/sec\"
+          }
+        ],
+        \"gridPos\": {\"h\": 8, \"w\": 12, \"x\": 12, \"y\": 0}
+      },
+      {
+        \"id\": 3,
+        \"title\": \"AI Response Time\",
+        \"type\": \"graph\",
+        \"targets\": [
+          {
+            \"expr\": \"histogram_quantile(0.50, rate(ai_request_duration_seconds_bucket[5m]))\",
+            \"legendFormat\": \"50th percentile\"
+          },
+          {
+            \"expr\": \"histogram_quantile(0.95, rate(ai_request_duration_seconds_bucket[5m]))\",
+            \"legendFormat\": \"95th percentile\"
+          },
+          {
+            \"expr\": \"histogram_quantile(0.99, rate(ai_request_duration_seconds_bucket[5m]))\",
+            \"legendFormat\": \"99th percentile\"
+          }
+        ],
+        \"gridPos\": {\"h\": 8, \"w\": 12, \"x\": 0, \"y\": 4}
+      },
+      {
+        \"id\": 4,
+        \"title\": \"AI Error Rate\",
+        \"type\": \"graph\",
+        \"targets\": [
+          {
+            \"expr\": \"rate(ai_requests_total{status=~\"4..\"}[5m])\",
+            \"legendFormat\": \"4xx errors/sec\"
+          },
+          {
+            \"expr\": \"rate(ai_requests_total{status=~\"5..\"}[5m])\",
+            \"legendFormat\": \"5xx errors/sec\"
+          },
+          {
+            \"expr\": \"rate(model_inference_errors_total[5m])\",
+            \"legendFormat\": \"Model errors/sec\"
+          }
+        ],
+        \"gridPos\": {\"h\": 8, \"w\": 12, \"x\": 12, \"y\": 8}
+      },
+      {
+        \"id\": 5,
+        \"title\": \"Model Performance\",
+        \"type\": \"graph\",
+        \"targets\": [
+          {
+            \"expr\": \"avg(model_accuracy_score)\",
+            \"legendFormat\": \"Average Accuracy\"
+          },
+          {
+            \"expr\": \"avg(model_confidence_score)\",
+            \"legendFormat\": \"Average Confidence\"
+          },
+          {
+            \"expr\": \"avg(model_f1_score)\",
+            \"legendFormat\": \"F1 Score\"
+          }
+        ],
+        \"gridPos\": {\"h\": 8, \"w\": 12, \"x\": 0, \"y\": 12}
+      },
+      {
+        \"id\": 6,
+        \"title\": \"Vector Search Performance\",
+        \"type\": \"graph\",
+        \"targets\": [
+          {
+            \"expr\": \"histogram_quantile(0.50, rate(vector_search_duration_seconds_bucket[5m]))\",
+            \"legendFormat\": \"50th percentile\"
+          },
+          {
+            \"expr\": \"histogram_quantile(0.95, rate(vector_search_duration_seconds_bucket[5m]))\",
+            \"legendFormat\": \"95th percentile\"
+          },
+          {
+            \"expr\": \"avg(vector_search_relevance_score)\",
+            \"legendFormat\": \"Avg Relevance\"
+          }
+        ],
+        \"gridPos\": {\"h\": 8, \"w\": 12, \"x\": 12, \"y\": 16}
+      },
+      {
+        \"id\": 7,
+        \"title\": \"Knowledge Base Usage\",
+        \"type\": \"graph\",
+        \"targets\": [
+          {
+            \"expr\": \"rate(knowledge_base_queries_total[5m])\",
+            \"legendFormat\": \"KB Queries/sec\"
+          },
+          {
+            \"expr\": \"rate(document_processing_rate[5m])\",
+            \"legendFormat\": \"Docs processed/sec\"
+          },
+          {
+            \"expr\": \"knowledge_base_size_bytes / 1024 / 1024\",
+            \"legendFormat\": \"KB Size (MB)\"
+          }
+        ],
+        \"gridPos\": {\"h\": 8, \"w\": 12, \"x\": 0, \"y\": 20}
+      },
+      {
+        \"id\": 8,
+        \"title\": \"Content Generation\",
+        \"type\": \"graph\",
+        \"targets\": [
+          {
+            \"expr\": \"rate(content_generation_requests_total[5m])\",
+            \"legendFormat\": \"Content Gen/sec\"
+          },
+          {
+            \"expr\": \"avg(content_quality_score)\",
+            \"legendFormat\": \"Avg Quality Score\"
+          },
+          {
+            \"expr\": \"avg(content_uniqueness_score)\",
+            \"legendFormat\": \"Avg Uniqueness Score\"
+          }
+        ],
+        \"gridPos\": {\"h\": 8, \"w\": 12, \"x\": 12, \"y\": 24}
+      },
+      {
+        \"id\": 9,
+        \"title\": \"AI Task Processing\",
+        \"type\": \"graph\",
+        \"targets\": [
+          {
+            \"expr\": \"rate(celery_task_processed_total[5m])\",
+            \"legendFormat\": \"Tasks processed/sec\"
+          },
+          {
+            \"expr\": \"rate(celery_task_failed_total[5m])\",
+            \"legendFormat\": \"Tasks failed/sec\"
+          },
+          {
+            \"expr\": \"celery_queue_length\",
+            \"legendFormat\": \"Queue Length\"
+          }
+        ],
+        \"gridPos\": {\"h\": 8, \"w\": 12, \"x\": 0, \"y\": 28}
+      },
+      {
+        \"id\": 10,
+        \"title\": \"Database Performance\",
+        \"type\": \"graph\",
+        \"targets\": [
+          {
+            \"expr\": \"rate(pg_stat_database_xact_commit{datname=\"sarvajaya_db\"}[5m])\",
+            \"legendFormat\": \"Commits/sec\"
+          },
+          {
+            \"expr\": \"rate(pg_stat_database_xact_rollback{datname=\"sarvajaya_db\"}[5m])\",
+            \"legendFormat\": \"Rollbacks/sec\"
+          },
+          {
+            \"expr\": \"pg_stat_activity_count\",
+            \"legendFormat\": \"Active Connections\"
+          }
+        ],\n        \"gridPos\": {\"h\": 8, \"w\": 12, \"x\": 12, \"y\": 32}
+      },
+      {
+        \"id\": 11,
+        \"title\": \"MLflow Tracking\",
+        \"type\": \"graph\",
+        \"targets\": [
+          {
+            \"expr\": \"rate(mlflow_runs_created_total[5m])\",
+            \"legendFormat\": \"Runs created/sec\"
+          },
+          {
+            \"expr\": \"avg(mlflow_model_accuracy)\",
+            \"legendFormat\": \"Model Accuracy\"
+          },
+          {
+            \"expr\": \"avg(mlflow_experiment_count)\",
+            \"legendFormat\": \"Active Experiments\"
+          }
+        ],\n        \"gridPos\": {\"h\": 8, \"w\": 12, \"x\": 0, \"y\": 36}
+      },
+      {
+        \"id\": 12,
+        \"title\": \"AI API Usage by Endpoint\",
+        \"type\": \"table\",
+        \"targets\": [
+          {
+            \"expr\": \"sum by (endpoint) (rate(ai_requests_total[5m]))\",
+            \"legendFormat\": \"\"
+          }
+        ],\n        \"gridPos\": {\"h\": 8, \"w\": 24, \"x\": 12, \"y\": 36}
+      },
+      {
+        \"id\": 13,
+        \"title\": \"System Resources\",
+        \"type\": \"graph\",
+        \"targets\": [
+          {
+            \"expr\": \"100 - (avg by(instance) (irate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)\",
+            \"legendFormat\": \"CPU Usage %\"
+          },
+          {
+            \"expr\": \"(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100\",
+            \"legendFormat\": \"Memory Usage %\"
+          },
+          {
+            \"expr\": \"(1 - (node_filesystem_avail_bytes / node_filesystem_size_bytes)) * 100\",
+            \"legendFormat\": \"Disk Usage %\"
+          }
+        ],\n        \"gridPos\": {\"h\": 8, \"w\": 24, \"x\": 0, \"y\": 44}
+      },
+      {
+        \"id\": 14,
+        \"title\": \"Active AI Users\",
+        \"type\": \"stat\",
+        \"targets\": [
+          {
+            \"expr\": \"count(count by (user_id) (rate(ai_requests_total[5m])))\",
+            \"legendFormat\": \"Active AI Users\"
+          }
+        ],\n        \"gridPos\": {\"h\": 4, \"w\": 6, \"x\": 0, \"y\": 52}
+      },
+      {
+        \"id\": 15,
+        \"title\": \"AI Model Usage\",
+        \"type\": \"piechart\",
+        \"targets\": [
+          {
+            \"expr\": \"sum by (model_name) (rate(ai_model_usage_total[5m]))\",
+            \"legendFormat\": \"{{model_name}}\"
+          }
+        ],\n        \"gridPos\": {\"h\": 8, \"w\": 12, \"x\": 6, \"y\": 52}
+      },
+      {
+        \"id\": 16,
+        \"title\": \"AI Error Log\",
+        \"type\": \"logs\",
+        \"targets\": [
+          {
+            \"expr\": \"{job=\"fastapi-app\", level=\"error\"} |~ \"ERROR|CRITICAL|MODEL_ERROR|INFERENCE_ERROR\"\",
+            \"legendFormat\": \"\"
+          }
+        ],\n        \"gridPos\": {\"h\": 8, \"w\": 12, \"x\": 18, \"y\": 52}
+      },
+      {
+        \"id\": 17,
+        \"title\": \"Token Usage\",
+        \"type\": \"graph\",
+        \"targets\": [
+          {
+            \"expr\": \"rate(token_usage_total[5m])\",
+            \"legendFormat\": \"Tokens/sec\"
+          },
+          {
+            \"expr\": \"avg(token_usage_per_request)\",
+            \"legendFormat\": \"Avg Tokens/Request\"
+          },
+          {
+            \"expr\": \"avg(token_cost_per_request)\",
+            \"legendFormat\": \"Avg Cost/Request\"
+          }
+        ],\n        \"gridPos\": {\"h\": 8, \"w\": 12, \"x\": 0, \"y\": 60}
+      },
+      {
+        \"id\": 18,
+        \"title\": \"Content Safety\",
+        \"type\": \"graph\",
+        \"targets\": [
+          {
+            \"expr\": \"rate(content_safety_checks_total[5m])\",
+            \"legendFormat\": \"Safety checks/sec\"
+          },
+          {
+            \"expr\": \"rate(content_flagged_total[5m])\",
+            \"legendFormat\": \"Content flagged/sec\"
+          },
+          {
+            \"expr\": \"avg(content_safety_score)\",
+            \"legendFormat\": \"Avg Safety Score\"
+          }
+        ],\n        \"gridPos\": {\"h\": 8, \"w\": 12, \"x\": 12, \"y\": 60}
+      }
+    ],\n    \"templating\": {\n      \"list\": [\n        {\n          \"name\": \"environment\",\n          \"type\": \"custom\",\n          \"query\": \"production,staging,development\",\n          \"current\": {\n            \"text\": \"production\",\n            \"value\": \"production\"\n          }\n        },\n        {\n          \"name\": \"time_range\",\n          \"type\": \"interval\",\n          \"query\": \"1m,5m,15m,1h,6h,12h,24h,7d\",\n          \"current\": {\n            \"text\": \"1h\",\n            \"value\": \"1h\"\n          }\n        },\n        {\n          \"name\": \"model_name\",\n          \"type\": \"query\",\n          \"datasource\": \"Prometheus\",\n          \"query\": \"label_values(ai_model_usage_total, model_name)\",\n          \"current\": {\n            \"text\": \"All\",\n            \"value\": \"$__all\"\n          }\n        }\n      ]\n    },\n    \"annotations\": {\n      \"list\": [\n        {\n          \"name\": \"Model Deployments\",\n          \"datasource\": \"Prometheus\",\n          \"expr\": \"changes(model_deployment_timestamp[1m]) > 0\",\n          \"titleFormat\": \"Model Deployment\",\n          \"textFormat\": \"Model {{model_name}} version {{version}} deployed\"\n        },\n        {\n          \"name\": \"AI System Updates\",\n          \"datasource\": \"Prometheus\",\n          \"expr\": \"changes(ai_system_update_timestamp[1m]) > 0\",\n          \"titleFormat\": \"AI System Update\",\n          \"textFormat\": \"System update {{version}} deployed\"\n        }\n      ]\n    }\n  }\n}
